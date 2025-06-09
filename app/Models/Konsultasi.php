@@ -36,5 +36,10 @@ class Konsultasi extends Model
     {
         return $this->belongsTo(User::class, 'ahli_id');
     }
+
+    public function messages()
+{
+    return $this->hasMany(Message::class);
+}
 }
 

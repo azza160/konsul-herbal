@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Ahli;
 use App\Models\Article;
 use App\Models\Komentar;
+use App\Models\Konsultasi;
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -145,10 +147,71 @@ class PenggunaController extends Controller
         ]);
     }
 
+
     public function PesanShow()
-    {
-        return Inertia::render('pengguna/Pesan');
+{
+    $user = Auth::user();
+
+
+    $konsultasis = $user->role === 'pengguna'
+        ? $user->konsultasiSebagaiPengguna()->where('status', 'diterima')->with(['ahli', 'messages.sender'])->get()
+        : $user->konsultasiSebagaiAhli()->where('status', 'diterima')->with(['pengguna', 'messages.sender'])->get();
+
+    $chatList = $konsultasis->map(function ($k) use ($user) {
+        $other = $user->role === 'pengguna' ? $k->ahli : $k->pengguna;
+
+        return [
+            'id' => $k->id,
+            'expertName' => $other->nama,
+            'avatar' => $other->foto ? asset('storage/' . $other->foto) : '/placeholder.svg',
+            'lastMessage' => $k->keluhan,
+        ];
+    });
+
+
+    // Ambil pesan2 per konsultasi
+    $chatMessages = [];
+    foreach ($konsultasis as $k) {
+        $chatMessages[$k->id] = $k->messages->map(function ($msg) use ($user) {
+            return [
+                'id' => $msg->id,
+                'sender' => $msg->sender_id === $user->id ? 'user' : 'expert',
+                'content' => $msg->message,
+                'time' => $msg->created_at->format('H:i'),
+            ];
+        });
     }
+
+    return Inertia::render('pengguna/Pesan', [
+        'chatList' => $chatList,
+        'chatMessages' => $chatMessages,
+        'user' => $user,
+
+    ]);
+}
+
+public function KirimPesan(Request $request)
+{
+    $request->validate([
+        'consultation_id' => 'required|exists:konsultasis,id',
+        'message' => 'required|string',
+    ]);
+
+    $user = Auth::user();
+
+    Message::create([
+        'konsultasi_id' => $request->consultation_id,
+        'sender_id' => $user->id,
+        'message' => $request->message,
+    ]);
+
+    return redirect()->back()->with('success', 'Pesan berhasil dikirim.')->with('selected_chat', $request->consultation_id);
+    ;
+}
+
+
+
+
 
     public function KomentarStore(Request $request)
 {
@@ -251,5 +314,24 @@ public function updatePassword(Request $request)
 
     return back()->with('success', 'Password berhasil diperbarui.');
 }
+
+public function BuatKonsultasi(Request $request){
+    $request->validate([
+        'ahli_id' => ['required', 'exists:users,id'],
+        'keluhan' => ['required', 'string', 'min:10'],
+    ]);
+
+    Konsultasi::create([
+        'id' => (string) Str::uuid(),
+        'pengguna_id' => Auth::id(),
+        'ahli_id' => $request->ahli_id,
+        'keluhan' => $request->keluhan,
+        'status' => 'menunggu',
+    ]);
+
+    return redirect()->back()->with('success', 'Konsultasi berhasil dikirim.');
+}
+
+
 
 }

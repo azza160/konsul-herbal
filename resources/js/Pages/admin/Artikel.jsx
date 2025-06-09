@@ -54,7 +54,7 @@ export default function ArticlesManagementPage() {
         articleId: null,
     });
     const [currentPage, setCurrentPage] = useState(1);
-    const perPage = 5; // jumlah artikel per halaman
+    const perPage = 3; // jumlah artikel per halaman
 
     const breadcrumbItems = [
         { label: "Admin", href: "/admin" },

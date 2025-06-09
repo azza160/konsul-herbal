@@ -12,12 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('konsultasis', function (Blueprint $table) {
-            $table->string('id')->primary(); // ubah dari $table->id() jadi string
-            $table->foreignId('pengguna_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('ahli_id')->constrained('users')->onDelete('cascade');
+            $table->string('id')->primary(); // UUID
+            $table->string('pengguna_id');
+            $table->string('ahli_id');
             $table->text('keluhan');
             $table->enum('status', ['menunggu', 'diterima', 'ditolak'])->default('menunggu');
             $table->timestamps();
+        
+            // Tambahkan foreign key secara manual
+            $table->foreign('pengguna_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('ahli_id')->references('id')->on('users')->onDelete('cascade');
         });
         
     }

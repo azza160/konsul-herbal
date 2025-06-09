@@ -31,8 +31,16 @@ Route::middleware(['auth', 'check.role:pengguna'])->group(function () {
     Route::get('/profile/edit-password', [PenggunaController::class, "EditPasswordProfile"])->name('edit-password-profile');
     Route::post('/profile/update-password', [PenggunaController::class, "UpdatePassword"])->name('update-password');
 
+    Route::post('/konsultasi', [PenggunaController::class, 'BuatKonsultasi'])->name('pengguna-konsultasi');
+
+    
+    
+    
+    
 });
 
+Route::get('/konsultasi/pesan', [PenggunaController::class, 'PesanShow']);
+Route::post('/konsultasi/pesan/kirim', [PenggunaController::class, 'KirimPesan'])->name('pesan.kirim');
 // Ahli
 Route::middleware(['auth', 'check.role:ahli'])->group(function () {
     Route::get('/ahli/dashboard', [AhliController::class, "AhliDashboardShow"])->name('ahli-dashboard-acount');
@@ -42,6 +50,8 @@ Route::middleware(['auth', 'check.role:ahli'])->group(function () {
     Route::get('/ahli/dashboard/profile/edit-profile', [AhliController::class, "EditProfile"])->name('ahli-profile-edit-acount');
     Route::post('/ahli/dashboard/profile/edit-profile', [AhliController::class, "UpdateProfile"])->name('ahli-profile-update-acount');
 
+    Route::post('/konsultasi/{id}/accept', [AhliController::class, 'Accept']);
+    Route::post('/konsultasi/{id}/reject', [AhliController::class, 'Reject']);
 });
 
 // Admin

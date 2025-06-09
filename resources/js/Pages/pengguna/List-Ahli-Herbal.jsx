@@ -177,6 +177,10 @@ function ExpertDetailDialog({ expert }) {
     };
 
     const formatExperience = (experience) => {
+        if (!experience) {
+            return <p className="text-gray-500 italic">Belum ada pengalaman.</p>;
+        }
+    
         return experience.split("\n\n").map((paragraph, index) => (
             <p
                 key={index}
@@ -186,6 +190,7 @@ function ExpertDetailDialog({ expert }) {
             </p>
         ));
     };
+    
 
     return (
         <DialogContent className="w-[95vw] max-w-4xl mx-auto max-h-[85vh] p-0">

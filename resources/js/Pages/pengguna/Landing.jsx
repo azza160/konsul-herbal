@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Header } from "../../layout/header"
 import { Footer } from "../../layout/footer"
 import { Calendar, Star,Mail,ArrowRight,Phone,Users, BookOpen, MessageCircle, ChevronDown, Plus,User,Briefcase,Award,MapPin,Eye,Send,GraduationCap,Search} from "lucide-react"
-import { Link,Head,usePage } from "@inertiajs/react"
+import { Link,Head,usePage,router } from "@inertiajs/react"
 import { route } from "ziggy-js"
 import { useAlert } from "../../components/myalert"
 import { useEffect } from "react"
@@ -25,13 +25,17 @@ function ConsultationDialog({ expert }) {
   
 
   const handleSubmit = (e) => {
-    console.log(expert.id)
-    e.preventDefault()
-    // Handle consultation request
-    console.log("Consultation request:", { expertId: expert.id, topic })
-    // Reset form
-    setTopic("")
-  }
+    e.preventDefault();
+  
+    router.post(route('pengguna-konsultasi'), {
+      ahli_id: expert.id,
+      keluhan: topic,
+    }, {
+      onSuccess: () => {
+        setTopic(""); // reset textarea kalau berhasil
+      },
+    });
+  };
 
   return (
     <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto max-h-[85vh] p-0">
@@ -129,20 +133,32 @@ function ExpertDetailDialog({ expert }) {
       day: "numeric",
       month: "long",
       year: "numeric",
-    })
-  }
-
+    });
+  };
+  
   const getGenderText = (jk) => {
-    return jk === "L" ? "Laki-laki" : "Perempuan"
-  }
-
+    return jk === "L" ? "Laki-laki" : "Perempuan";
+  };
+  
   const formatExperience = (experience) => {
+    if (!experience || typeof experience !== "string") {
+      return (
+        <p className="text-gray-500 italic text-sm sm:text-base">
+          Belum ada pengalaman yang dituliskan.
+        </p>
+      );
+    }
+  
     return experience.split("\n\n").map((paragraph, index) => (
-      <p key={index} className="mb-3 sm:mb-4 text-gray-700 leading-relaxed text-sm sm:text-base">
+      <p
+        key={index}
+        className="mb-3 sm:mb-4 text-gray-700 leading-relaxed text-sm sm:text-base"
+      >
         {paragraph}
       </p>
-    ))
-  }
+    ));
+  };
+  
 
   return (
     <DialogContent className="w-[95vw] max-w-4xl mx-auto max-h-[85vh] p-0">

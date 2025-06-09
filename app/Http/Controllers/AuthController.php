@@ -66,7 +66,7 @@ class AuthController extends Controller
     // Redirect sesuai role
     $redirectRoute = match ($user->role) {
         'pengguna' => 'beranda',
-        'ahli' => 'ahli-dashboard',
+        'ahli' => 'ahli-dashboard-acount',
         'admin' => 'admin-dashboard',
         default => '/',
     };

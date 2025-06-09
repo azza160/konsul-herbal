@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,92 +24,49 @@ import { ExpertSidebar } from "../../layout/ahli-sidebar";
 import { AdminHeader } from "../../layout/admin-header";
 import { Breadcrumb } from "../../components/breadcrump";
 import { Input } from "@/components/ui/input";
+import { useAlert } from "../../components/myalert";
+
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
-import { MessageSquare, CheckCircle, Clock, X, Check,Search } from "lucide-react";
-import { Head } from "@inertiajs/react";
+import {
+    MessageSquare,
+    CheckCircle,
+    Clock,
+    X,
+    Check,
+    Search,
+} from "lucide-react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
+import clsx from "clsx";
 
 export default function ConsultationsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("terbaru");
+    const { consultations, flash } = usePage().props;
+    const { showSuccess, AlertContainer } = useAlert();
+    useEffect(() => {
+        if (flash.success) {
+            showSuccess("Berhasil", flash.success);
+        }
+    }, [flash.success]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortBy, setSortBy] = useState("terbaru");
+    const [currentPage, setCurrentPage] = useState(1);
+    const perPage = 10;
+
     const [confirmModal, setConfirmModal] = useState({
         open: false,
         consultation: null,
         action: null,
     });
 
-    const sidebarItems = [
-        {
-            label: "Dashboard",
-            href: "/expert/dashboard",
-            icon: <MessageSquare className="h-4 w-4" />,
-        },
-        {
-            label: "Konfirmasi Konsultasi",
-            href: "/expert/consultations",
-            icon: <CheckCircle className="h-4 w-4" />,
-        },
-        {
-            label: "Pesan",
-            href: "/expert/messages",
-            icon: <MessageSquare className="h-4 w-4" />,
-        },
-    ];
-
     const breadcrumbItems = [
         { label: "Expert", href: "/expert" },
         { label: "Konfirmasi Konsultasi" },
-    ];
-
-    const consultations = [
-        {
-            id: 1,
-            patientName: "Sari Dewi",
-            topic: "Masalah Pencernaan",
-            status: "pending",
-            requestTime: "2024-01-15 10:30",
-            description: "Sering merasa mual dan perut kembung setelah makan",
-        },
-        {
-            id: 2,
-            patientName: "Budi Santoso",
-            topic: "Nyeri Sendi",
-            status: "pending",
-            requestTime: "2024-01-15 09:15",
-            description:
-                "Nyeri pada lutut dan siku, terutama saat cuaca dingin",
-        },
-        {
-            id: 3,
-            patientName: "Maya Putri",
-            topic: "Insomnia",
-            status: "pending",
-            requestTime: "2024-01-15 08:45",
-            description: "Sulit tidur dan sering terbangun di malam hari",
-        },
-        {
-            id: 4,
-            patientName: "Ahmad Rahman",
-            topic: "Hipertensi",
-            status: "pending",
-            requestTime: "2024-01-14 16:20",
-            description:
-                "Tekanan darah tinggi, ingin mencoba pengobatan herbal",
-        },
-        {
-            id: 5,
-            patientName: "Rina Sari",
-            topic: "Migrain",
-            status: "pending",
-            requestTime: "2024-01-14 14:10",
-            description: "Sering sakit kepala sebelah, terutama saat stress",
-        },
     ];
 
     const handleAction = (consultation, action) => {
@@ -117,11 +74,31 @@ export default function ConsultationsPage() {
     };
 
     const confirmAction = () => {
-        console.log(
-            `${confirmModal.action} consultation:`,
-            confirmModal.consultation?.id
+        const { consultation, action } = confirmModal;
+
+        if (!consultation || !action) return;
+
+        const route =
+            action === "accept"
+                ? `/konsultasi/${consultation.id}/accept`
+                : `/konsultasi/${consultation.id}/reject`;
+
+        router.post(
+            route,
+            {},
+            {
+                onSuccess: () => {
+                    setConfirmModal({
+                        open: false,
+                        consultation: null,
+                        action: null,
+                    });
+                },
+                onError: () => {
+                    alert("Terjadi kesalahan saat memproses aksi.");
+                },
+            }
         );
-        setConfirmModal({ open: false, consultation: null, action: null });
     };
 
     const containerVariants = {
@@ -146,8 +123,38 @@ export default function ConsultationsPage() {
         },
     };
 
+    // Filter berdasarkan pencarian topik
+    const filteredConsultations = consultations.filter((c) =>
+        c.topic.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Sort berdasarkan waktu request
+    const sortedConsultations = [...filteredConsultations].sort((a, b) => {
+        const dateA = new Date(a.requestTime);
+        const dateB = new Date(b.requestTime);
+
+        return sortBy === "terbaru" ? dateB - dateA : dateA - dateB;
+    });
+
+    // Pagination
+    const totalItems = sortedConsultations.length;
+    const totalPages = Math.ceil(totalItems / perPage);
+    const paginatedConsultations = sortedConsultations.slice(
+        (currentPage - 1) * perPage,
+        currentPage * perPage
+    );
+
+    // Reset ke halaman 1 saat search/sort berubah
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, sortBy]);
+
     return (
         <>
+            <div className="fixed z-[500]">
+                <AlertContainer />
+            </div>
+
             <Head title="konfirmasi" />
             <div className="flex flex-col min-h-screen bg-background">
                 <AdminHeader />
@@ -173,22 +180,22 @@ export default function ConsultationsPage() {
                             </p>
                         </motion.div>
 
-                        {/* Search and Filter */}
+                        {/* Search & Filter */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2, duration: 0.5 }}
-                            className="flex flex-col md:flex-row gap-4 mb-6"
+                            className="flex flex-col md:flex-row gap-4 mb-5"
                         >
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                 <Input
-                                    placeholder="Cari artikel..."
+                                    placeholder="Cari topik konsultasi..."
                                     value={searchTerm}
                                     onChange={(e) =>
                                         setSearchTerm(e.target.value)
                                     }
-                                    className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                    className="pl-10"
                                 />
                             </div>
                             <Select value={sortBy} onValueChange={setSortBy}>
@@ -218,7 +225,7 @@ export default function ConsultationsPage() {
                                         <Clock className="h-5 w-5" />
                                         <span>
                                             Konsultasi Pending (
-                                            {consultations.length})
+                                            {paginatedConsultations.length})
                                         </span>
                                     </CardTitle>
                                 </CardHeader>
@@ -234,9 +241,6 @@ export default function ConsultationsPage() {
                                                         Topik Konsultasi
                                                     </TableHead>
                                                     <TableHead className="p-4">
-                                                        Deskripsi
-                                                    </TableHead>
-                                                    <TableHead className="p-4">
                                                         Waktu Request
                                                     </TableHead>
                                                     <TableHead className="p-4">
@@ -249,7 +253,7 @@ export default function ConsultationsPage() {
                                             </TableHeader>
                                             <TableBody>
                                                 <AnimatePresence>
-                                                    {consultations.map(
+                                                    {paginatedConsultations.map(
                                                         (
                                                             consultation,
                                                             index
@@ -292,18 +296,6 @@ export default function ConsultationsPage() {
                                                                         consultation.topic
                                                                     }
                                                                 </TableCell>
-                                                                <TableCell className="p-4 text-muted-foreground">
-                                                                    <p
-                                                                        className="truncate"
-                                                                        title={
-                                                                            consultation.description
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            consultation.description
-                                                                        }
-                                                                    </p>
-                                                                </TableCell>
                                                                 <TableCell className="p-4">
                                                                     {
                                                                         consultation.requestTime
@@ -324,60 +316,83 @@ export default function ConsultationsPage() {
                                                                                 0.2,
                                                                             type: "spring",
                                                                         }}
-                                                                        className="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800"
+                                                                        className={clsx(
+                                                                            "px-2 py-1 rounded-full text-xs font-medium capitalize",
+                                                                            {
+                                                                                "bg-orange-100 text-orange-800":
+                                                                                    consultation.status ===
+                                                                                    "menunggu",
+                                                                                "bg-green-100 text-green-800":
+                                                                                    consultation.status ===
+                                                                                    "diterima",
+                                                                                "bg-red-100 text-red-800":
+                                                                                    consultation.status ===
+                                                                                    "ditolak",
+                                                                            }
+                                                                        )}
                                                                     >
-                                                                        Pending
+                                                                        {
+                                                                            consultation.status
+                                                                        }
                                                                     </motion.span>
                                                                 </TableCell>
+
                                                                 <TableCell className="p-4">
-                                                                    <div className="flex space-x-2">
-                                                                        <motion.div
-                                                                            whileHover={{
-                                                                                scale: 1.1,
-                                                                            }}
-                                                                            whileTap={{
-                                                                                scale: 0.9,
-                                                                            }}
-                                                                        >
-                                                                            <Button
-                                                                                variant="default"
-                                                                                size="sm"
-                                                                                onClick={() =>
-                                                                                    handleAction(
-                                                                                        consultation,
-                                                                                        "accept"
-                                                                                    )
-                                                                                }
-                                                                                className="hover:shadow-md transition-shadow duration-200"
+                                                                    {consultation.status ===
+                                                                    "menunggu" ? (
+                                                                        <div className="flex space-x-2">
+                                                                            <motion.div
+                                                                                whileHover={{
+                                                                                    scale: 1.1,
+                                                                                }}
+                                                                                whileTap={{
+                                                                                    scale: 0.9,
+                                                                                }}
                                                                             >
-                                                                                <Check className="h-4 w-4 mr-1" />
-                                                                                Terima
-                                                                            </Button>
-                                                                        </motion.div>
-                                                                        <motion.div
-                                                                            whileHover={{
-                                                                                scale: 1.1,
-                                                                            }}
-                                                                            whileTap={{
-                                                                                scale: 0.9,
-                                                                            }}
-                                                                        >
-                                                                            <Button
-                                                                                variant="destructive"
-                                                                                size="sm"
-                                                                                onClick={() =>
-                                                                                    handleAction(
-                                                                                        consultation,
-                                                                                        "reject"
-                                                                                    )
-                                                                                }
-                                                                                className="hover:shadow-md transition-shadow duration-200"
+                                                                                <Button
+                                                                                    variant="default"
+                                                                                    size="sm"
+                                                                                    onClick={() =>
+                                                                                        handleAction(
+                                                                                            consultation,
+                                                                                            "accept"
+                                                                                        )
+                                                                                    }
+                                                                                    className="hover:shadow-md transition-shadow duration-200"
+                                                                                >
+                                                                                    <Check className="h-4 w-4 mr-1" />
+                                                                                    Terima
+                                                                                </Button>
+                                                                            </motion.div>
+                                                                            <motion.div
+                                                                                whileHover={{
+                                                                                    scale: 1.1,
+                                                                                }}
+                                                                                whileTap={{
+                                                                                    scale: 0.9,
+                                                                                }}
                                                                             >
-                                                                                <X className="h-4 w-4 mr-1" />
-                                                                                Tolak
-                                                                            </Button>
-                                                                        </motion.div>
-                                                                    </div>
+                                                                                <Button
+                                                                                    variant="destructive"
+                                                                                    size="sm"
+                                                                                    onClick={() =>
+                                                                                        handleAction(
+                                                                                            consultation,
+                                                                                            "reject"
+                                                                                        )
+                                                                                    }
+                                                                                    className="hover:shadow-md transition-shadow duration-200"
+                                                                                >
+                                                                                    <X className="h-4 w-4 mr-1" />
+                                                                                    Tolak
+                                                                                </Button>
+                                                                            </motion.div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-muted-foreground text-sm">
+                                                                            Selesai
+                                                                        </span>
+                                                                    )}
                                                                 </TableCell>
                                                             </motion.tr>
                                                         )
@@ -389,7 +404,48 @@ export default function ConsultationsPage() {
                                 </CardContent>
                             </Card>
                         </motion.div>
-
+                        {totalPages > 1 && (
+                            <div className="flex justify-between items-center mt-4 px-2 md:px-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Menampilkan{" "}
+                                    {(currentPage - 1) * perPage + 1} -{" "}
+                                    {Math.min(
+                                        currentPage * perPage,
+                                        totalItems
+                                    )}{" "}
+                                    dari {totalItems} konsultasi
+                                </p>
+                                <div className="flex items-center space-x-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setCurrentPage((prev) =>
+                                                Math.max(prev - 1, 1)
+                                            )
+                                        }
+                                        disabled={currentPage === 1}
+                                    >
+                                        ← Sebelumnya
+                                    </Button>
+                                    <span className="text-sm text-muted-foreground">
+                                        Halaman {currentPage} / {totalPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setCurrentPage((prev) =>
+                                                Math.min(prev + 1, totalPages)
+                                            )
+                                        }
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Berikutnya →
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                         {/* Confirmation Modal */}
                         <AnimatePresence>
                             {confirmModal.open && (

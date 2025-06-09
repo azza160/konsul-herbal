@@ -46,11 +46,15 @@ export default function ProfilePage() {
     };
 
     const formatExperience = (experience) => {
+        if (!experience) {
+          return <p className="text-gray-500 italic">Belum ada pengalaman</p>;
+        }
+      
         return experience.split("\n\n").map((paragraph, index) => (
           <p key={index} className="mb-3 sm:mb-4 text-gray-700 leading-relaxed text-sm sm:text-base">
             {paragraph}
           </p>
-        ))
+        ));
       }
 
     return (
