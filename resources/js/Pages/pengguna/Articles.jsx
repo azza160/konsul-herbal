@@ -81,7 +81,7 @@ export default function ArticlesPage() {
     return (
         <>
             <Head title="list-artikel" />
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-background bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
                 <Header />
 
                 <div className="container mx-auto px-4 py-6">

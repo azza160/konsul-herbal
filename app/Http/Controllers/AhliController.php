@@ -174,7 +174,7 @@ public function PesanShow()
         return [
             'id' => $k->id,
             'expertName' => $other->nama,
-            'avatar' => $other->foto ? asset('storage/' . $other->foto) : '/placeholder.svg',
+            'avatar' => $other->foto ? $other->foto : '/placeholder.svg',
             'lastMessage' => $k->keluhan,
         ];
     });
@@ -217,7 +217,7 @@ public function KirimPesan(Request $request)
     ]);
 
     return redirect()->back()->with('success', 'Pesan berhasil dikirim.')->with('selected_chat', $request->consultation_id);
-    ;
+    
 }
 
 public function getLatestMessages(Request $request)

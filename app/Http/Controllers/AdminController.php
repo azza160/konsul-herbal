@@ -280,6 +280,7 @@ class AdminController extends Controller
 
     public function AhliHerbalStore(Request $request)
     {
+        
 
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
@@ -292,6 +293,7 @@ class AdminController extends Controller
             'telp' => 'nullable|string|max:20',
             'pengalaman' => 'nullable|string',
         ]);
+
 
         // Handle upload foto jika ada
         $fotoPath = null;

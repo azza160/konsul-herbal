@@ -163,7 +163,7 @@ class PenggunaController extends Controller
         return [
             'id' => $k->id,
             'expertName' => $other->nama,
-            'avatar' => $other->foto ? asset('storage/' . $other->foto) : '/placeholder.svg',
+            'avatar' => $other->foto ? $other->foto : '/placeholder.svg',
             'lastMessage' => $k->keluhan,
         ];
     });

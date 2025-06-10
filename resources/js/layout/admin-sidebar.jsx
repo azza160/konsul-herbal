@@ -65,7 +65,7 @@ export function AdminSidebar({ activeLink = "/admin/dashboard" }) {
       <Button
         variant="outline"
         size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden bg-background shadow-lg"
+        className="fixed top-20 left-4 z-50 md:hidden bg-background shadow-lg"
         onClick={toggleMobile}
       >
         <AnimatePresence mode="wait">
@@ -115,12 +115,12 @@ export function AdminSidebar({ activeLink = "/admin/dashboard" }) {
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "fixed left-0 z-40 h-screen bg-card border-r shadow-lg flex flex-col",
+          "fixed left-0 z-50 h-screen bg-card border-r shadow-lg flex flex-col",
           "md:relative md:z-0",
           // Mobile: hidden by default, show when mobileOpen is true
-          mobileOpen ? "translate-x-0 top-16" : "-translate-x-full top-0",
+          mobileOpen ? "translate-x-0 top-16" : "-translate-x-full top-16",
           // Desktop: always visible
-          "md:translate-x-0",
+          "md:translate-x-0 md:top-0 md:sticky md:top-0",
         )}
       >
         {/* Header */}

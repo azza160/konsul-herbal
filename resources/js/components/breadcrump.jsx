@@ -2,10 +2,25 @@
 
 import { motion } from "framer-motion"
 import { ChevronRight, Home } from "lucide-react"
-import { Link } from "@inertiajs/react"
+import { Link, usePage } from "@inertiajs/react"
 import { cn } from "@/lib/utils"
+import { route } from 'ziggy-js'
+
 
 export function Breadcrumb({ items, className }) {
+  const {user} = usePage().props
+  const role = user.role // pastikan role tersedia di props
+
+let homeRoute = ''
+
+if (role === 'pengguna') {
+  homeRoute = route('beranda')
+} else if (role === 'ahli') {
+  homeRoute = route('ahli-dashboard-acount')
+} else if (role === 'admin') {
+  homeRoute = route('admin-dashboard')
+}
+
   return (
     <motion.nav
       initial={{ opacity: 0, y: -10 }}
@@ -14,10 +29,10 @@ export function Breadcrumb({ items, className }) {
       className={cn("flex items-center space-x-1 text-sm text-muted-foreground mb-6", className)}
     >
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        <Link href="/" className="flex items-center hover:text-primary transition-colors duration-200">
-          <Home className="h-4 w-4" />
-        </Link>
-      </motion.div>
+  <Link href={homeRoute} className="flex items-center hover:text-primary transition-colors duration-200">
+    <Home className="h-4 w-4" />
+  </Link>
+</motion.div>
 
       {items.map((item, index) => (
         <motion.div

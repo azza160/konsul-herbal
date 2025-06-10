@@ -313,7 +313,7 @@ export default function RegisterPage() {
                               id="password"
                               name="password"
                               type={showPassword ? "text" : "password"}
-                              placeholder="Minimal 8 karakter"
+                              placeholder="Minimal 6 karakter"
                               className="pl-10 pr-10 h-11"
                               required
                               value={formData.password}

@@ -22,15 +22,24 @@ export function Header() {
     const currentUrl = usePage().url;
 
     const menuItems = [
-        { label: "Beranda", href: route("beranda"), path: "/" },
-        { label: "Artikel", href: route("list-artikel"), path: "/list-artikel" },
-        { label: "Ahli Herbal", href: route("list-ahli-herbal"), path: "/list-ahli-herbal" },
-        { label: "Pesan", href: route("pengguna-pesan"), path: "/konsultasi/pesan" },
-        { label: "Profile", href: route("profile"), path: "/profile" },
+        { label: "Beranda", href: route("beranda"), routeName: "beranda" },
+        { label: "Artikel", href: route("list-artikel"), routeName: "list-artikel" },
+        { label: "Ahli Herbal", href: route("list-ahli-herbal"), routeName: "list-ahli-herbal" },
+        { label: "Pesan", href: route("pengguna-pesan"), routeName: "pengguna-pesan" },
+        { label: "Profile", href: route("profile"), routeName: "profile" },
     ];
 
-    const isActive = (path) => {
-        return currentUrl.startsWith(path);
+    const isActive = (routeName) => {
+        // Get the current route name from the URL
+        const currentRoute = currentUrl.split('/').filter(Boolean)[0] || 'beranda';
+        
+        // Special case for beranda (home)
+        if (routeName === 'beranda') {
+            return currentRoute === '' || currentRoute === 'beranda';
+        }
+        
+        // For other routes, check if the current route matches
+        return currentRoute === routeName;
     };
 
     const menuVariants = {
@@ -100,7 +109,7 @@ export function Header() {
                                 <Link
                                     href={item.href}
                                     className={`text-sm font-medium transition-colors hover:text-primary duration-200 ${
-                                        isActive(item.path) ? "text-green-600" : ""
+                                        isActive(item.routeName) ? "text-green-600" : ""
                                     }`}
                                 >
                                     {item.label}
@@ -196,7 +205,7 @@ export function Header() {
                                         <Link
                                             href={item.href}
                                             className={`text-sm font-medium transition-colors hover:text-primary px-2 py-1 block ${
-                                                isActive(item.path) ? "text-green-600" : ""
+                                                isActive(item.routeName) ? "text-green-600" : ""
                                             }`}
                                             onClick={() => setIsMenuOpen(false)}
                                         >

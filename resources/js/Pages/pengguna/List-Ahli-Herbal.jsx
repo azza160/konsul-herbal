@@ -47,19 +47,29 @@ import {
     Search,
     AlertTriangle
 } from "lucide-react";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage,router } from "@inertiajs/react";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { route } from "ziggy-js";
 function ConsultationDialog({ expert }) {
     const [topic, setTopic] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Handle consultation request
-        console.log("Consultation request:", { expertId: expert.id, topic });
-        // Reset form
-        setTopic("");
+
+        router.post(
+            route("pengguna-konsultasi"),
+            {
+                ahli_id: expert.id,
+                keluhan: topic,
+            },
+            {
+                onSuccess: () => {
+                    setTopic(""); // reset textarea kalau berhasil
+                },
+            }
+        );
     };
 
     return (
