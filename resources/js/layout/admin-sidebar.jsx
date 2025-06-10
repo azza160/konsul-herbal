@@ -44,12 +44,7 @@ export function AdminSidebar({ activeLink = "/admin/dashboard" }) {
       icon: <Users className="h-4 w-4" />,
       description: "Kelola pengguna platform",
     },
-    {
-      label: "Pengaturan",
-      href: "/admin/settings",
-      icon: <Settings className="h-4 w-4" />,
-      description: "Konfigurasi sistem",
-    },
+
   ]
 
   const toggleCollapsed = () => {

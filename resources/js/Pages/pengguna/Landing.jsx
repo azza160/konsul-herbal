@@ -849,14 +849,7 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ delay: 0.5, duration: 0.5 }}
             >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="outline" asChild>
-                  <Link href="/faq" className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Lihat FAQ Lengkap
-                  </Link>
-                </Button>
-              </motion.div>
+
             </motion.div>
           </div>
         </motion.section>

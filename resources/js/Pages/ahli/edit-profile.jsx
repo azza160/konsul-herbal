@@ -139,7 +139,7 @@ export default function EditProfilePage() {
                             <Breadcrumb items={breadcrumbItems} />
                         </div>
                         <motion.div
-                            className="w-full max-w-3xl"
+                            className="w-full"
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"

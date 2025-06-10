@@ -141,7 +141,7 @@ export default function CreateArticlePage() {
             <div className="flex flex-col min-h-screen bg-background">
                 <AdminHeader />
                 <div className="flex flex-1 overflow-hidden">
-                    <AdminSidebar activeLink={route("artikel-dashboard")} />
+                    <AdminSidebar activeLink={route("ahli-herbal-dashboard")} />
 
                     <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
                         {/* Breadcrumb */}

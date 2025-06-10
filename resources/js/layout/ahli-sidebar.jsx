@@ -33,14 +33,14 @@ export function ExpertSidebar({ activeLink = "/ahli/dashboard" }) {
       href: route('ahli-konfirmasi'),
       icon: <CheckCircle className="h-4 w-4" />,
       description: "Permintaan konsultasi",
-      badge: 8,
+      badge: null,
     },
     {
       label: "Pesan",
-      href: "/expert/messages",
+      href: route('ahli-pesan'),
       icon: <MessageSquare className="h-4 w-4" />,
       description: "Chat dengan pasien",
-      badge: 3,
+      badge:null
     },
 
   ]

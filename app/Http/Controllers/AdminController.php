@@ -6,6 +6,7 @@ use App\Models\Ahli;
 use App\Models\Article;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -15,13 +16,25 @@ class AdminController extends Controller
 {
     public function DashboardShow()
     {
-        return Inertia::render('admin/Dashboard');
+        $user = Auth::user();
+        $JumlahArtikel = Article::count();
+        $JumlahAhliHerbal = User::where('role','ahli')->count();
+        $JumlahPengguna = User::where('role','pengguna')->count();
+        return Inertia::render('admin/Dashboard',[
+            'user' => $user,
+            'jumlahArtikel' => $JumlahArtikel,
+            'JumlahAhliHerbal' => $JumlahAhliHerbal,
+            'JumlahPengguna' => $JumlahPengguna
+
+        ]);
     }
 
     /* BAGIAN ARTIKEL */
 
     public function ArtikelAdminShow()
     {
+        $user = Auth::user();
+
         // Ambil semua data artikel dari DB, diurutkan dari yang terbaru
         $articles = Article::orderBy('created_at', 'desc')
             ->get()
@@ -38,12 +51,17 @@ class AdminController extends Controller
 
         return Inertia::render('admin/Artikel', [
             'articles' => $articles,
+            'user' => $user
         ]);
     }
 
     public function ArtikelCreateAdminShow()
     {
-        return Inertia::render('admin/create-artikel');
+        $user = Auth::user();
+
+        return Inertia::render('admin/create-artikel',[
+            'user' => $user
+        ]);
     }
 
     public function ArtikelStore(Request $request)
@@ -87,9 +105,11 @@ class AdminController extends Controller
 
     public function ArtikelEdit($id)
     {
+        $user = Auth::user();
         $article = Article::findOrFail($id);
         return Inertia::render('admin/edit-artikel', [
             'article' => $article,
+            'user' => $user
         ]);
     }
 
@@ -127,6 +147,8 @@ class AdminController extends Controller
 
     public function AhliAdminShow()
     {
+        $user = Auth::user();
+
         // Ambil semua data artikel dari DB, diurutkan dari yang terbaru
         $ahlis = Ahli::orderBy('created_at', 'desc')
             ->get()
@@ -140,12 +162,17 @@ class AdminController extends Controller
 
         return Inertia::render('admin/Ahli', [
             'ahlis' => $ahlis,
+            'user' => $user
         ]);
     }
 
     public function AhliCreateAdminShow()
     {
-        return Inertia::render('admin/create-ahli');
+        $user = Auth::user();
+
+        return Inertia::render('admin/create-ahli',[
+            'user' => $user
+        ]);
     }
 
     public function AhliStore(Request $request)
@@ -172,9 +199,11 @@ class AdminController extends Controller
 
     public function AhliEdit($id)
     {
+        $user = Auth::user();
         $ahli = Ahli::findOrFail($id);
         return Inertia::render('admin/edit-ahli', [
             'ahli' => $ahli,
+            'user' => $user
         ]);
     }
 
@@ -200,6 +229,8 @@ class AdminController extends Controller
     public function AhliHerbalAdminShow()
     {
         // Ambil user dengan role 'ahli' beserta data spesialisasi dari relasi 'ahli'
+        $user = Auth::user();
+
         $usersAhli = User::with('ahli')
             ->where('role', 'ahli')
             ->orderBy('created_at', 'desc')
@@ -221,11 +252,14 @@ class AdminController extends Controller
 
         return Inertia::render('admin/ahli-herbal', [
             'usersAhlis' => $usersAhli,
+            'user' => $user
         ]);
     }
 
     public function AhliHerbalCreateAdminShow()
     {
+        $user = Auth::user();
+
         // Ambil semua spesialisasi ahli untuk dropdown
         $spesialisasis = Ahli::orderBy('nama_spesialisasi')
             ->get()
@@ -238,6 +272,7 @@ class AdminController extends Controller
 
         return Inertia::render('admin/create-ahli-herbal', [
             'spesialisasis' => $spesialisasis,
+            'user' => $user
         ]);
     }
 
@@ -297,6 +332,8 @@ class AdminController extends Controller
     /* Bagian Pengguna */
 
     public function PenggunaAdminShow(){
+        $user = Auth::user();
+
             // Ambil user dengan role 'pengguna' beserta data spesialisasi dari relasi 'ahli'
             $pengguna = User::where('role', 'pengguna')
             ->orderBy('created_at', 'desc')
@@ -315,6 +352,7 @@ class AdminController extends Controller
 
             return Inertia::render('admin/Pengguna', [
                 'usersAhlis' => $pengguna,
+                'user' => $user
             ]);
     }
 

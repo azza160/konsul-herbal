@@ -5,64 +5,55 @@ import { Button } from "@/components/ui/button"
 import { ExpertSidebar } from "../../layout/ahli-sidebar"
 import { AdminHeader } from "../../layout/admin-header"
 import { useAlert } from "../../components/myalert"
-import { MessageSquare, CheckCircle, Clock, Users, TrendingUp } from "lucide-react"
+import { MessageSquare,  Clock, Users, TrendingUp,Hourglass,CheckCircle,XCircle } from "lucide-react"
 import { Head,usePage } from "@inertiajs/react"
 import { useEffect } from "react"
+import { route } from "ziggy-js"
 export default function ExpertDashboard() {
+
+  const { flash,jumlahKonsulPending,jumlahKonsulAcc,jumlahKonsulTolak } = usePage().props
+
 
   const stats = [
     {
       title: "Konsultasi Pending",
-      value: "8",
+      value: jumlahKonsulPending,
       description: "Menunggu konfirmasi",
-      icon: <Clock className="h-8 w-8 text-orange-600" />,
-      trend: "3 konsultasi baru hari ini",
+      icon: <Hourglass className="h-8 w-8 text-orange-600" />,
     },
     {
-      title: "Konsultasi Aktif",
-      value: "12",
-      description: "Sedang berlangsung",
-      icon: <MessageSquare className="h-8 w-8 text-blue-600" />,
-      trend: "2 pesan belum dibaca",
+      title: "Konsultasi Diterima",
+      value: jumlahKonsulAcc,
+      description: "Konsultasi yang diterima",
+      icon: <CheckCircle className="h-8 w-8 text-blue-600" />,
+  
     },
     {
-      title: "Total Pasien",
-      value: "156",
-      description: "Pasien yang pernah dikonsultasi",
-      icon: <Users className="h-8 w-8 text-green-600" />,
-      trend: "+5 pasien baru minggu ini",
+      title: "Konsultasi Ditolak",
+      value: jumlahKonsulTolak,
+      description: "Konsultasi yang ditolak",
+      icon: <XCircle className="h-8 w-8 text-red-600" />,
+ 
     },
   ]
+  
 
   const quickActions = [
     {
       title: "Konfirmasi Konsultasi",
-      description: "8 konsultasi menunggu",
+      description: `${jumlahKonsulPending} Konsultasi Menunggu`,
       icon: <CheckCircle className="h-8 w-8 text-orange-600" />,
-      href: "/expert/consultations",
+      href: route('ahli-konfirmasi'),
     },
     {
       title: "Pesan",
       description: "2 pesan belum dibaca",
       icon: <MessageSquare className="h-8 w-8 text-blue-600" />,
-      href: "/expert/messages",
+      href: route('ahli-pesan'),
     },
   ]
 
-  // Demo alert functions
-  const handleAcceptConsultation = () => {
-    showSuccess("Konsultasi Diterima!", "Konsultasi dengan pasien telah diterima")
-  }
-
-  const handleRejectConsultation = () => {
-    showError("Konsultasi Ditolak", "Konsultasi dengan pasien telah ditolak")
-  }
-
-  const handleNewMessage = () => {
-    showInfo("Pesan Baru", "Anda memiliki pesan baru dari pasien")
-  }
-
-  const { flash } = usePage().props
+ 
   const { showSuccess, AlertContainer } = useAlert()
   useEffect(() => {
     if (flash.success) {
@@ -79,9 +70,9 @@ export default function ExpertDashboard() {
       <div className="flex flex-col min-h-screen bg-background">
         <AdminHeader />
         <div className="flex flex-1 overflow-hidden">
-          <ExpertSidebar activeLink={route('ahli-dashboard')} />
+          <ExpertSidebar activeLink={route('ahli-dashboard-acount')} />
 
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 md:ml-0">
+          <main className="flex-1  overflow-y-auto p-4 md:p-6 lg:p-8 md:ml-0">
             {/* Welcome Section */}
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -90,18 +81,6 @@ export default function ExpertDashboard() {
                   <p className="text-muted-foreground">Selamat datang, Dr. Sari Herbal</p>
                 </div>
 
-                {/* Demo Alert Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={handleAcceptConsultation} className="bg-green-600 hover:bg-green-700">
-                    Terima Konsultasi
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={handleRejectConsultation}>
-                    Tolak Konsultasi
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleNewMessage}>
-                    Pesan Baru
-                  </Button>
-                </div>
               </div>
             </motion.div>
 
@@ -128,10 +107,7 @@ export default function ExpertDashboard() {
                     <CardContent>
                       <div className="text-2xl font-bold">{stat.value}</div>
                       <p className="text-xs text-muted-foreground">{stat.description}</p>
-                      <div className="flex items-center mt-2">
-                        <TrendingUp className="h-3 w-3 text-blue-600 mr-1" />
-                        <p className="text-xs text-blue-600">{stat.trend}</p>
-                      </div>
+             
                     </CardContent>
                   </Card>
                 </motion.div>

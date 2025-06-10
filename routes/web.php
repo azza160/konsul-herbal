@@ -23,7 +23,7 @@ Route::middleware(['auth', 'check.role:pengguna'])->group(function () {
     Route::get('/list-artikel', [PenggunaController::class, "ListArtikelShow"])->name('list-artikel');
     Route::get('/artikel/{id}', [PenggunaController::class, "DetailArtikelShow"])->name('detail-artikel');
     Route::get('/list-ahli-herbal', [PenggunaController::class, "AhliHerbalShow"])->name('list-ahli-herbal');
-    Route::get('/pesan', [PenggunaController::class, "PesanShow"])->name('pesan');
+ 
     Route::post('/komentar', [PenggunaController::class, 'KomentarStore'])->name('komentar.store');
     Route::get('/profile', [PenggunaController::class, "Profile"])->name('profile');
     Route::get('/profile/edit-profile', [PenggunaController::class, "EditProfileShow"])->name('edit-profile');
@@ -33,14 +33,12 @@ Route::middleware(['auth', 'check.role:pengguna'])->group(function () {
 
     Route::post('/konsultasi', [PenggunaController::class, 'BuatKonsultasi'])->name('pengguna-konsultasi');
 
-    
-    
-    
-    
+    Route::get('/konsultasi/pesan', [PenggunaController::class, 'PesanShow'])->name('pengguna-pesan');
+    Route::post('/konsultasi/pesan/kirim', [PenggunaController::class, 'KirimPesan'])->name('pesan.kirim');
+    Route::get('/konsultasi/pesan/latest', [PenggunaController::class, 'getLatestMessages'])->name('pesan.latest');   
 });
 
-Route::get('/konsultasi/pesan', [PenggunaController::class, 'PesanShow']);
-Route::post('/konsultasi/pesan/kirim', [PenggunaController::class, 'KirimPesan'])->name('pesan.kirim');
+
 // Ahli
 Route::middleware(['auth', 'check.role:ahli'])->group(function () {
     Route::get('/ahli/dashboard', [AhliController::class, "AhliDashboardShow"])->name('ahli-dashboard-acount');
@@ -49,9 +47,15 @@ Route::middleware(['auth', 'check.role:ahli'])->group(function () {
     Route::get('/ahli/dashboard/profile', [AhliController::class, "Profile"])->name('ahli-profile');
     Route::get('/ahli/dashboard/profile/edit-profile', [AhliController::class, "EditProfile"])->name('ahli-profile-edit-acount');
     Route::post('/ahli/dashboard/profile/edit-profile', [AhliController::class, "UpdateProfile"])->name('ahli-profile-update-acount');
+    Route::get('/ahli/dashboard/profile/edit-password', [AhliController::class, "EditPasswordProfile"])->name('edit-ahli-password-profile');
+    Route::post('/ahli/dashboard/profile/profile/update-password', [AhliController::class, "UpdatePassword"])->name('ahli-update-password');
 
     Route::post('/konsultasi/{id}/accept', [AhliController::class, 'Accept']);
     Route::post('/konsultasi/{id}/reject', [AhliController::class, 'Reject']);
+
+    Route::get('/ahli/pesan', [AhliController::class, 'PesanShow'])->name('ahli-pesan');
+    Route::post('/ahli/pesan/kirim', [AhliController::class, 'KirimPesan'])->name('ahli-pesan-kirim');
+    Route::get('/ahli/pesan/latest', [AhliController::class, 'getLatestMessages'])->name('ahli-pesan-latest');   
 });
 
 // Admin

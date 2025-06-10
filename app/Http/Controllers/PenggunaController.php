@@ -213,6 +213,8 @@ public function KirimPesan(Request $request)
 
 
 
+
+
     public function KomentarStore(Request $request)
 {
     $request->validate([
@@ -332,6 +334,25 @@ public function BuatKonsultasi(Request $request){
     return redirect()->back()->with('success', 'Konsultasi berhasil dikirim.');
 }
 
+public function getLatestMessages(Request $request)
+{
+    $request->validate([
+        'consultation_id' => 'required|exists:konsultasis,id',
+    ]);
 
+    $user = Auth::user();
+    $konsultasi = Konsultasi::with(['messages.sender'])->findOrFail($request->consultation_id);
+
+    $messages = $konsultasi->messages->map(function ($msg) use ($user) {
+        return [
+            'id' => $msg->id,
+            'sender' => $msg->sender_id === $user->id ? 'user' : 'expert',
+            'content' => $msg->message,
+            'time' => $msg->created_at->format('H:i'),
+        ];
+    });
+
+    return response()->json(['messages' => $messages]);
+}
 
 }

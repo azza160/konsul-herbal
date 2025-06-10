@@ -10,77 +10,65 @@ import { Head,usePage } from "@inertiajs/react"
 import { useAlert } from "../../components/myalert"
 import { Users, FileText, UserCheck, TrendingUp } from "lucide-react"
 import { useEffect } from "react"
+import { route } from "ziggy-js"
 
 export default function AdminDashboard() {
 
   const breadcrumbItems = [{ label: "Admin", href: "/admin" }, { label: "Dashboard" }]
 
-  const stats = [
-    {
-      title: "Total Artikel",
-      value: "156",
-      description: "Artikel yang telah dipublikasi",
-      icon: <FileText className="h-8 w-8 text-blue-600" />,
-      trend: "+12% dari bulan lalu",
-      color: "blue",
-    },
-    {
-      title: "Total Ahli Herbal",
-      value: "24",
-      description: "Ahli herbal aktif",
-      icon: <UserCheck className="h-8 w-8 text-green-600" />,
-      trend: "+3 ahli baru",
-      color: "green",
-    },
-    {
-      title: "Total Pengguna",
-      value: "2,847",
-      description: "Pengguna terdaftar",
-      icon: <Users className="h-8 w-8 text-purple-600" />,
-      trend: "+18% dari bulan lalu",
-      color: "purple",
-    },
-  ]
+ 
 
   const quickActions = [
     {
       title: "Tambah Artikel",
       icon: <FileText className="h-8 w-8 text-blue-600" />,
-      href: "/admin/articles/create",
+      href: route('create-artikel-dashboard'),
       description: "Buat artikel baru",
     },
     {
       title: "Kelola Ahli",
       icon: <UserCheck className="h-8 w-8 text-green-600" />,
-      href: "/admin/experts",
+      href: route('ahli-dashboard'),
       description: "Kelola ahli herbal",
     },
     {
       title: "Kelola User",
       icon: <Users className="h-8 w-8 text-purple-600" />,
-      href: "/admin/users",
+      href: route('pengguna-dashboard'),
       description: "Kelola pengguna",
     },
   ]
 
-  // Demo alert functions
-  const handleTestAlerts = () => {
-    showSuccess("Berhasil!", "Data telah disimpan dengan sukses")
-  }
 
-  const handleTestError = () => {
-    showError("Gagal!", "Terjadi kesalahan saat menyimpan data")
-  }
 
-  const handleTestWarning = () => {
-    showWarning("Peringatan!", "Beberapa data mungkin tidak tersimpan")
-  }
+  const { flash,jumlahArtikel,JumlahAhliHerbal,JumlahPengguna } = usePage().props
 
-  const handleTestInfo = () => {
-    showInfo("Informasi", "Sistem akan maintenance dalam 30 menit")
-  }
+  const stats = [
+    {
+      title: "Total Artikel",
+      value:jumlahArtikel,
+      description: "Artikel yang telah dipublikasi",
+      icon: <FileText className="h-8 w-8 text-blue-600" />,
 
-  const { flash } = usePage().props
+      color: "blue",
+    },
+    {
+      title: "Total Ahli Herbal",
+      value: JumlahAhliHerbal,
+      description: "Ahli herbal aktif",
+      icon: <UserCheck className="h-8 w-8 text-green-600" />,
+  
+      color: "green",
+    },
+    {
+      title: "Total Pengguna",
+      value: JumlahPengguna,
+      description: "Pengguna terdaftar",
+      icon: <Users className="h-8 w-8 text-purple-600" />,
+ 
+      color: "purple",
+    },
+  ]
   const { showSuccess, AlertContainer } = useAlert()
   useEffect(() => {
     if (flash.success) {
@@ -117,21 +105,7 @@ export default function AdminDashboard() {
                   <p className="text-muted-foreground">Selamat datang di panel administrasi HerbalCare</p>
                 </div>
 
-                {/* Demo Alert Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={handleTestAlerts} className="bg-green-600 hover:bg-green-700">
-                    Test Success
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={handleTestError}>
-                    Test Error
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleTestWarning}>
-                    Test Warning
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={handleTestInfo}>
-                    Test Info
-                  </Button>
-                </div>
+                
               </div>
             </motion.div>
 
@@ -168,15 +142,7 @@ export default function AdminDashboard() {
                         {stat.value}
                       </motion.div>
                       <p className="text-xs text-muted-foreground">{stat.description}</p>
-                      <motion.div
-                        className="flex items-center mt-2"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.1 + 0.6 }}
-                      >
-                        <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-                        <p className="text-xs text-green-600">{stat.trend}</p>
-                      </motion.div>
+   
                     </CardContent>
                   </Card>
                 </motion.div>
