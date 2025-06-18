@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('konsultasi_id');
             $table->string('sender_id');
         
-            $table->text('message');
+            $table->text('message')->nullable();
+            $table->string('image')->nullable();
             $table->timestamps();
         
             // Foreign key constraints manual

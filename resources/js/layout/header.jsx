@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Menu, X, Check, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,85 @@ import {
 } from "@/components/ui/dialog";
 import { Link, usePage, router } from "@inertiajs/react";
 import { route } from "ziggy-js";
+import axios from "axios";
 
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const { user } = usePage().props;
     const currentUrl = usePage().url;
+
+    // Fetch notifications
+    useEffect(() => {
+        if (user && (user.role === 'pengguna' || user.role === 'ahli')) {
+            const fetchNotifications = () => {
+                const routeName = user.role === 'pengguna' ? 'pengguna.notifications.get' : 'ahli.notifications.get';
+                console.log('Fetching notifications for user:', user.role, 'using route:', routeName);
+                
+                axios.get(route(routeName))
+                    .then(response => {
+                        console.log('Notifications response:', response.data);
+                        setNotifications(response.data.notifications);
+                        setUnreadCount(response.data.unread_count);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching notifications:', error);
+                    });
+            };
+
+            // Initial fetch
+            fetchNotifications();                                   
+
+            // Set up polling
+            const interval = setInterval(fetchNotifications, 5000);
+
+            return () => clearInterval(interval);
+        }
+    }, [user]);
+
+    // Mark notifications as read when opening dialog
+    const handleOpenNotifications = () => {
+        setShowNotifications(true);
+        if (unreadCount > 0) {
+            const routeName = user.role === 'pengguna' ? 'pengguna.notifications.read-all' : 'ahli.notifications.read-all';
+            axios.post(route(routeName))
+                .then(() => {
+                    setUnreadCount(0);
+                    setNotifications(prev => 
+                        prev.map(n => ({ ...n, is_read: true }))
+                    );
+                });
+        }
+    };
+
+    const handleDeleteAllNotifications = () => {
+        const routeName = user.role === 'pengguna' ? 'pengguna.notifications.delete-all' : 'ahli.notifications.delete-all';
+        axios.delete(route(routeName))
+            .then(() => {
+                setNotifications([]);
+                setUnreadCount(0);
+            })
+            .catch(error => {
+                console.error('Error deleting all notifications:', error);
+            });
+    };
+
+    const handleDeleteNotification = (notificationId) => {
+        const routeName = user.role === 'pengguna' ? 'pengguna.notifications.delete' : 'ahli.notifications.delete';
+        axios.delete(route(routeName, notificationId))
+            .then(() => {
+                setNotifications(prev => prev.filter(n => n.id !== notificationId));
+                if (unreadCount > 0) {
+                    setUnreadCount(prev => prev - 1);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting notification:', error);
+            });
+    };
 
     const menuItems = [
         { label: "Beranda", href: route("beranda"), routeName: "beranda" },
@@ -120,6 +192,28 @@ export function Header() {
 
                     {/* Right side */}
                     <div className="flex items-center space-x-4">
+                        {/* Notification Button - Only show for users and experts */}
+                        {user && (user.role === 'pengguna' || user.role === 'ahli') && (
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleOpenNotifications}
+                                    className="relative"
+                                >
+                                    <Bell className="h-5 w-5" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </Button>
+                            </motion.div>
+                        )}
+
                         {/* Login Button */}
                         <motion.div
                             whileHover={{ scale: 1.05 }}
@@ -246,6 +340,57 @@ export function Header() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Notifications Dialog */}
+            <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <div className="flex items-center justify-between">
+                            <DialogTitle>Notifikasi</DialogTitle>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleDeleteAllNotifications}
+                                className="text-red-600 hover:text-red-700"
+                            >
+                                Hapus Semua
+                            </Button>
+                        </div>
+                    </DialogHeader>
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        {notifications.length > 0 ? (
+                            <div className="space-y-4">
+                                {notifications.map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        className={`p-3 rounded-lg relative ${
+                                            notification.is_read ? 'bg-muted' : 'bg-primary/10'
+                                        }`}
+                                    >
+                                        <button
+                                            onClick={() => handleDeleteNotification(notification.id)}
+                                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-colors"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                        <h4 className="font-medium pr-8">{notification.title}</h4>
+                                        <p className="text-sm text-muted-foreground pr-8">
+                                            {notification.message}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {new Date(notification.created_at).toLocaleString()}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-center text-muted-foreground py-4">
+                                Tidak ada notifikasi
+                            </p>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </motion.header>
     );
 }

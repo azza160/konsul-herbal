@@ -5,17 +5,27 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\AhliController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\NotificationController;
 
 // Guest only
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'LoginShow'])->name('login');
-    Route::get('/register', [AuthController::class, 'RegisterShow'])->name('register');
+    Route::get('/register', [AuthController::class, 'RegisterShow'])->name('register.show');
     Route::post('/register', [AuthController::class, 'Register'])->name('register');
     Route::post('/login', [AuthController::class, 'login'])->name('login');
 });
 
 // Authenticated (semua)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Test notification routes (temporary)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/pengguna/notifications', [NotificationController::class, 'getNotifications'])->name('pengguna.notifications.get');
+    Route::post('/pengguna/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('pengguna.notifications.read');
+    Route::post('/pengguna/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('pengguna.notifications.read-all');
+    Route::delete('/pengguna/notifications/{id}', [NotificationController::class, 'deleteNotification'])->name('pengguna.notifications.delete');
+    Route::delete('/pengguna/notifications', [NotificationController::class, 'deleteAllNotifications'])->name('pengguna.notifications.delete-all');
+});
 
 // Pengguna
 Route::middleware(['auth', 'check.role:pengguna'])->group(function () {
@@ -36,6 +46,8 @@ Route::middleware(['auth', 'check.role:pengguna'])->group(function () {
     Route::get('/konsultasi/pesan', [PenggunaController::class, 'PesanShow'])->name('pengguna-pesan');
     Route::post('/konsultasi/pesan/kirim', [PenggunaController::class, 'KirimPesan'])->name('pesan.kirim');
     Route::get('/konsultasi/pesan/latest', [PenggunaController::class, 'getLatestMessages'])->name('pesan.latest');   
+    Route::put('/konsultasi/pesan/edit', [PenggunaController::class, 'editMessage'])->name('pesan.edit');
+    Route::delete('/konsultasi/pesan/delete', [PenggunaController::class, 'deleteMessage'])->name('pesan.delete');
 });
 
 
@@ -48,7 +60,7 @@ Route::middleware(['auth', 'check.role:ahli'])->group(function () {
     Route::get('/ahli/dashboard/profile/edit-profile', [AhliController::class, "EditProfile"])->name('ahli-profile-edit-acount');
     Route::post('/ahli/dashboard/profile/edit-profile', [AhliController::class, "UpdateProfile"])->name('ahli-profile-update-acount');
     Route::get('/ahli/dashboard/profile/edit-password', [AhliController::class, "EditPasswordProfile"])->name('edit-ahli-password-profile');
-    Route::post('/ahli/dashboard/profile/profile/update-password', [AhliController::class, "UpdatePassword"])->name('ahli-update-password');
+    Route::post('/ahli/dashboard/profile/update-password', [AhliController::class, "UpdatePassword"])->name('ahli-update-password');
 
     Route::post('/konsultasi/{id}/accept', [AhliController::class, 'Accept']);
     Route::post('/konsultasi/{id}/reject', [AhliController::class, 'Reject']);
@@ -56,6 +68,15 @@ Route::middleware(['auth', 'check.role:ahli'])->group(function () {
     Route::get('/ahli/pesan', [AhliController::class, 'PesanShow'])->name('ahli-pesan');
     Route::post('/ahli/pesan/kirim', [AhliController::class, 'KirimPesan'])->name('ahli-pesan-kirim');
     Route::get('/ahli/pesan/latest', [AhliController::class, 'getLatestMessages'])->name('ahli-pesan-latest');   
+    Route::put('/ahli/pesan/edit', [AhliController::class, 'editMessage'])->name('ahli-pesan-edit');
+    Route::delete('/ahli/pesan/delete', [AhliController::class, 'deleteMessage'])->name('ahli-pesan-delete');
+
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('ahli.notifications.get');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('ahli.notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('ahli.notifications.read-all');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification'])->name('ahli.notifications.delete');
+    Route::delete('/notifications', [NotificationController::class, 'deleteAllNotifications'])->name('ahli.notifications.delete-all');
 });
 
 // Admin

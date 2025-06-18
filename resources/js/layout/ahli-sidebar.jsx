@@ -1,17 +1,67 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Link } from "@inertiajs/react"
-import { ChevronLeft, Menu, X, MessageSquare, CheckCircle, Calendar, User, Settings } from "lucide-react"
+import { Link, usePage } from "@inertiajs/react"
+import { ChevronLeft, Menu, X, MessageSquare, CheckCircle, Calendar, User, Settings, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { route } from "ziggy-js"
+import axios from "axios"
 
 export function ExpertSidebar({ activeLink = "/ahli/dashboard" }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  const { user } = usePage().props
+
+  // Fetch notifications
+  useEffect(() => {
+    if (user && user.role === 'ahli') {
+      const fetchNotifications = () => {
+        axios.get(route('ahli.notifications.get'))
+          .then(response => {
+            setNotifications(response.data.notifications)
+            setUnreadCount(response.data.unread_count)
+          })
+          .catch(error => {
+            console.error('Error fetching notifications:', error)
+          })
+      }
+
+      // Initial fetch
+      fetchNotifications()
+
+      // Set up polling
+      const interval = setInterval(fetchNotifications, 5000)
+
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  // Mark notifications as read when opening dialog
+  const handleOpenNotifications = () => {
+    setShowNotifications(true)
+    if (unreadCount > 0) {
+      axios.post(route('ahli.notifications.read-all'))
+        .then(() => {
+          setUnreadCount(0)
+          setNotifications(prev => 
+            prev.map(n => ({ ...n, is_read: true }))
+          )
+        })
+    }
+  }
 
   const sidebarItems = [
     {
@@ -40,9 +90,8 @@ export function ExpertSidebar({ activeLink = "/ahli/dashboard" }) {
       href: route('ahli-pesan'),
       icon: <MessageSquare className="h-4 w-4" />,
       description: "Chat dengan pasien",
-      badge:null
+      badge: null
     },
-
   ]
 
   const toggleCollapsed = () => {
@@ -203,79 +252,107 @@ export function ExpertSidebar({ activeLink = "/ahli/dashboard" }) {
                           className="flex-1 min-w-0"
                         >
                           <div className="flex items-center justify-between">
-                            <div>
-                              <div className="truncate">{item.label}</div>
-                              <div className="text-xs opacity-70 truncate">{item.description}</div>
-                            </div>
+                            <span className="truncate">{item.label}</span>
                             {item.badge && (
-                              <Badge
-                                variant={isActive ? "secondary" : "destructive"}
-                                className="text-xs h-5 min-w-[20px] flex items-center justify-center"
-                              >
+                              <Badge variant="secondary" className="ml-auto">
                                 {item.badge}
                               </Badge>
                             )}
                           </div>
+                          <p className="text-xs text-muted-foreground truncate">{item.description}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
-
-                    {/* Badge for collapsed state */}
-                    {collapsed && item.badge && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {item.badge > 9 ? "9+" : item.badge}
-                      </div>
-                    )}
-
-                    {/* Active Indicator */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeIndicatorExpert"
-                        className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-
-                    {/* Tooltip for collapsed state */}
-                    {collapsed && (
-                      <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                        <div>{item.label}</div>
-                        {item.badge && <div className="text-red-500 font-medium">{item.badge} pending</div>}
-                      </div>
-                    )}
                   </Link>
                 </motion.div>
               )
             })}
+
+            {/* Notification Button */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: sidebarItems.length * 0.1, duration: 0.3 }}
+            >
+              <Button
+                variant="ghost"
+                onClick={handleOpenNotifications}
+                className={cn(
+                  "w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group relative",
+                  "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  collapsed && "justify-center px-2",
+                )}
+              >
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="flex-shrink-0 relative">
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </motion.div>
+
+                <AnimatePresence>
+                  {!collapsed && (
+                    <motion.div
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: "auto" }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex-1 min-w-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="truncate">Notifikasi</span>
+                        {unreadCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">Pesan dan pemberitahuan</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </motion.div>
           </div>
         </nav>
-
-        {/* Status Indicator */}
-        <div className="border-t p-4">
-          <AnimatePresence>
-            {!collapsed ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center space-x-2"
-              >
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-muted-foreground">Online</span>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex justify-center"
-              >
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
       </motion.aside>
+
+      {/* Notifications Dialog */}
+      <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notifikasi</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            {notifications.length > 0 ? (
+              <div className="space-y-4">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 rounded-lg ${
+                      notification.is_read ? 'bg-muted' : 'bg-primary/10'
+                    }`}
+                  >
+                    <h4 className="font-medium">{notification.title}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(notification.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                Tidak ada notifikasi
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

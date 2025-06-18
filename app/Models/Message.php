@@ -13,6 +13,7 @@ class Message extends Model
         'konsultasi_id',
         'sender_id',
         'message',
+        'image',
     ];
 
     public function consultation()

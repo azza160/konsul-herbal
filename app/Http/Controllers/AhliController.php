@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Ahli;
 use App\Models\Konsultasi;
 use App\Models\Message;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -120,7 +123,7 @@ class AhliController extends Controller
         ]);
     }
 
-    public function updatePassword(Request $request)
+    public function UpdatePassword(Request $request)
 {
     $user = Auth::user();
 
@@ -146,7 +149,34 @@ class AhliController extends Controller
         $konsultasi = Konsultasi::findOrFail($id);
         $konsultasi->status = 'diterima';
         $konsultasi->save();
-    
+        
+        // Create notification for user
+        Notification::create([
+            'user_id' => $konsultasi->pengguna_id,
+            'type' => 'consultation_accepted',
+            'title' => 'Permintaan Konsultasi Diterima',
+            'message' => 'Permintaan konsultasi Anda telah diterima oleh ahli.',
+            'related_id' => $konsultasi->id,
+            'is_read' => false,
+        ]);
+
+        // Send bot welcome message
+        $botMessage = "Selamat datang di konsultasi herbal! 🌿\n\n" .
+                     "Saya adalah bot asisten yang akan membantu Anda selama proses konsultasi.\n\n" .
+                     "📋 Langkah-langkah konsultasi:\n" .
+                     "1. Jelaskan keluhan Anda secara detail\n" .
+                     "2. Ahli akan menganalisis dan memberikan saran\n" .
+                     "3. Anda dapat bertanya lebih lanjut jika diperlukan\n" .
+                     "4. Konsultasi akan berlangsung hingga masalah teratasi\n\n" .
+                     "💡 Tips: Berikan informasi yang lengkap agar ahli dapat memberikan saran yang tepat.\n\n" .
+                     "Selamat berkonsultasi! 🙏";
+
+        Message::create([
+            'konsultasi_id' => $konsultasi->id,
+            'sender_id' => $konsultasi->ahli_id, // Bot message appears as from ahli
+            'message' => $botMessage,
+        ]);
+
         return back()->with('success', 'Konsultasi berhasil diterima.');
     }
 
@@ -155,6 +185,15 @@ class AhliController extends Controller
     $konsultasi = Konsultasi::findOrFail($id);
     $konsultasi->status = 'ditolak';
     $konsultasi->save();
+
+    // Create notification for user
+    Notification::create([
+        'user_id' => $konsultasi->pengguna_id,
+        'type' => 'consultation_rejected',
+        'title' => 'Permintaan Konsultasi Ditolak',
+        'message' => 'Permintaan konsultasi Anda ditolak oleh ahli.',
+        'related_id' => $konsultasi->id,
+    ]);
 
     return back()->with('success', 'Konsultasi berhasil ditolak.');
 }
@@ -187,7 +226,9 @@ public function PesanShow()
             return [
                 'id' => $msg->id,
                 'sender' => $msg->sender_id === $user->id ? 'user' : 'expert',
+                'sender_id' => $msg->sender_id,
                 'content' => $msg->message,
+                'image' => $msg->image ? asset($msg->image) : null,
                 'time' => $msg->created_at->format('H:i'),
             ];
         });
@@ -203,26 +244,63 @@ public function PesanShow()
 
 public function KirimPesan(Request $request)
 {
-    $request->validate([
-        'consultation_id' => 'required|exists:konsultasis,id',
-        'message' => 'required|string',
-    ]);
+    try {
+        $request->validate([
+            'consultation_id' => 'required|exists:konsultasis,id',
+            'message' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-    $user = Auth::user();
+        $user = Auth::user();
+        $konsultasi = Konsultasi::with(['pengguna', 'ahli'])->findOrFail($request->consultation_id);
+        
+        // Verify user is part of this consultation
+        if ($user->id !== $konsultasi->pengguna_id && $user->id !== $konsultasi->ahli_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
-    Message::create([
-        'konsultasi_id' => $request->consultation_id,
-        'sender_id' => $user->id,
-        'message' => $request->message,
-    ]);
+        $data = [
+            'konsultasi_id' => $request->consultation_id,
+            'sender_id' => $user->id,
+        ];
 
-    return redirect()->back()->with('success', 'Pesan berhasil dikirim.')->with('selected_chat', $request->consultation_id);
-    
+        if ($request->filled('message')) {
+            $data['message'] = $request->message;
+        }
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('chat-images', 'public');
+            $data['image'] = '/storage/' . $imagePath;
+        }
+
+        Message::create($data);
+
+        // Create notification for the other user
+        $recipientId = $user->id === $konsultasi->pengguna_id ? $konsultasi->ahli_id : $konsultasi->pengguna_id;
+        $recipient = User::find($recipientId);
+        $senderName = $user->nama;
+
+        Notification::create([
+            'user_id' => $recipientId,
+            'type' => 'new_message',
+            'title' => 'Pesan Baru',
+            'message' => "Pesan baru di konsultasi dengan {$senderName}",
+            'related_id' => $konsultasi->id,
+            'is_read' => false,
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Pesan berhasil dikirim.')
+            ->with('selected_chat', $request->consultation_id);
+    } catch (\Exception $e) {
+        \Log::error('Error sending message: ' . $e->getMessage());
+        return redirect()->back()
+            ->with('error', 'Gagal mengirim pesan. Silakan coba lagi.');
+    }
 }
 
 public function getLatestMessages(Request $request)
 {
-    
     $request->validate([
         'consultation_id' => 'required|exists:konsultasis,id',
     ]);
@@ -234,11 +312,69 @@ public function getLatestMessages(Request $request)
         return [
             'id' => $msg->id,
             'sender' => $msg->sender_id === $user->id ? 'user' : 'expert',
+            'sender_id' => $msg->sender_id,
             'content' => $msg->message,
+            'image' => $msg->image ? asset($msg->image) : null,
             'time' => $msg->created_at->format('H:i'),
         ];
     });
 
     return response()->json(['messages' => $messages]);
+}
+
+public function editMessage(Request $request)
+{
+    try {
+        $request->validate([
+            'message_id' => 'required|exists:messages,id',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $user = Auth::user();
+        $message = Message::findOrFail($request->message_id);
+        
+        // Verify user owns this message
+        if ($message->sender_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $message->update([
+            'message' => $request->message,
+        ]);
+
+        return response()->json(['success' => true, 'message' => $message]);
+    } catch (\Exception $e) {
+        \Log::error('Error editing message: ' . $e->getMessage());
+        return response()->json(['error' => 'Gagal mengedit pesan. Silakan coba lagi.'], 500);
+    }
+}
+
+public function deleteMessage(Request $request)
+{
+    try {
+        $request->validate([
+            'message_id' => 'required|exists:messages,id',
+        ]);
+
+        $user = Auth::user();
+        $message = Message::findOrFail($request->message_id);
+        
+        // Verify user owns this message
+        if ($message->sender_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Delete image if exists
+        if ($message->image && Storage::disk('public')->exists(str_replace('/storage/', '', $message->image))) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $message->image));
+        }
+
+        $message->delete();
+
+        return response()->json(['success' => true]);
+    } catch (\Exception $e) {
+        \Log::error('Error deleting message: ' . $e->getMessage());
+        return response()->json(['error' => 'Gagal menghapus pesan. Silakan coba lagi.'], 500);
+    }
 }
 }
