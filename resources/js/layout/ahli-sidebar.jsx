@@ -187,7 +187,7 @@ export function ExpertSidebar({ activeLink = "/ahli/dashboard" }) {
                 </div>
                 <div>
                   <span className="text-lg font-bold text-emerald-600">Expert Panel</span>
-                  <p className="text-xs text-muted-foreground">Dr. Sari Herbal</p>
+                  <p className="text-xs text-muted-foreground">{user.nama}</p>
                 </div>
               </motion.div>
             ) : (
