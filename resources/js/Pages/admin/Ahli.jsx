@@ -290,7 +290,7 @@ export default function ArticlesManagementPage() {
                                                                 >
                                                                     {/* no */}
                                                                     <TableCell className="p-4 font-medium">
-                                                                       1
+                                                                       {(currentPage - 1) * perPage + index + 1}
                                                                     </TableCell>
                                                                     {/* nama */}
                                                                     <TableCell className="p-4 font-medium">

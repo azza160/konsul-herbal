@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ExpertSidebar } from "../../layout/ahli-sidebar";
@@ -12,6 +12,8 @@ import { AdminHeader } from "../../layout/admin-header";
 import { Breadcrumb } from "../../components/breadcrump";
 import { Send, Search, ArrowLeft, Image as ImageIcon, X, Loader2, MoreVertical, Trash2, Bell } from "lucide-react"
 import { Head, router, usePage } from "@inertiajs/react"
+import { Input } from "@/components/ui/input"
+
 import {
   AlertDialog,
   AlertDialogContent,
@@ -41,6 +43,7 @@ export default function ChatPage() {
   const [isMobileView, setIsMobileView] = useState(false)
   const [showChatList, setShowChatList] = useState(true)
   const messagesEndRef = useRef(null)
+  const textareaRef = useRef(null)
   const {chatList,chatMessages,user} = usePage().props
   const [chatMessagesState, setChatMessagesState] = useState(chatMessages || {});
   const [currentMessages, setCurrentMessages] = useState([]);
@@ -205,12 +208,22 @@ export default function ChatPage() {
       onSuccess: () => {
         setMessage("");
         setSelectedImage(null);
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+        }
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100);
       },
     });
   };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage(e);
+    }
+  }
 
   const handleChatSelect = (chatId) => {
     setSelectedChat(chatId);
@@ -243,6 +256,13 @@ export default function ChatPage() {
       [messageId]: false
     }));
   };
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [message]);
 
   // Handle delete message
   const handleDeleteMessage = (message) => {
@@ -486,12 +506,15 @@ export default function ChatPage() {
 
                             {/* Message Input */}
                             <div className="border-t p-3 sm:p-4 bg-background w-full">
-                              <form onSubmit={handleSendMessage} className="flex items-center space-x-2 w-full">
-                                <Input
+                              <form onSubmit={handleSendMessage} className="flex items-end space-x-2 w-full">
+                                <Textarea
+                                  ref={textareaRef}
                                   placeholder="Ketik pesan..."
                                   value={message}
                                   onChange={(e) => setMessage(e.target.value)}
-                                  className="flex-1 min-w-0 h-10"
+                                  onKeyDown={handleKeyDown}
+                                  className="flex-1 min-w-0 resize-none overflow-y-hidden"
+                                  rows={1}
                                 />
                                 <input
                                   type="file"

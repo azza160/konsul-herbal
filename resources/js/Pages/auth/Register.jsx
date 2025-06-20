@@ -7,16 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, UserPlus, Mail, User, Phone, Lock, Eye, EyeOff, Leaf, Shield, Heart, Star } from "lucide-react"
-import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Head, Link,usePage,router } from "@inertiajs/react"
 import { useAlert } from "../../components/myalert"
 
 export default function RegisterPage() {
-  const [date, setDate] = useState()
   const [isLoading, setIsLoading] = useState(false)
   const [step, setStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
@@ -26,7 +22,7 @@ export default function RegisterPage() {
     telp: "",
     password: "",
     jk: "laki-laki",
-    tgl_lahir: null, 
+    tgl_lahir: "", 
   })
 
   const { flash } = usePage().props
@@ -64,17 +60,9 @@ export default function RegisterPage() {
     return;
   }
 
-  // Format tanggal
-  const formattedDate = new Date(tgl_lahir).toISOString().split('T')[0];
-
-  const payload = {
-    ...formData,
-    tgl_lahir: formattedDate,
-  };
-
   setIsLoading(true);
 
-  router.post('/register', payload, {
+  router.post('/register', formData, {
     onSuccess: () => setIsLoading(false),
     onError: (errors) => {
       console.log('Validation Errors:', errors);
@@ -332,34 +320,19 @@ export default function RegisterPage() {
 
                         {/* Date Field */}
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium">Tanggal Lahir</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                            <Button
-  variant="outline"
-  className={cn(
-    "w-full h-11 justify-start text-left font-normal",
-    !formData.tgl_lahir && "text-muted-foreground",
-  )}
->
-  <CalendarIcon className="mr-2 h-4 w-4" />
-  {formData.tgl_lahir
-    ? format(formData.tgl_lahir, "dd MMMM yyyy")
-    : "Pilih tanggal lahir"}
-</Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={formData.tgl_lahir}
-                                onSelect={(selectedDate) =>
-                                  setFormData((prev) => ({ ...prev, tgl_lahir: selectedDate }))
-                                }
-                                initialFocus
-                                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <Label htmlFor="tgl_lahir" className="text-sm font-medium">Tanggal Lahir</Label>
+                          <div className="relative">
+                            <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="tgl_lahir"
+                              name="tgl_lahir"
+                              type="date"
+                              className="pl-10 h-11"
+                              required
+                              value={formData.tgl_lahir}
+                              onChange={handleChange}
+                            />
+                          </div>
                         </div>
 
                         {/* Gender Field */}

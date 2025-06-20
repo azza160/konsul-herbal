@@ -183,7 +183,7 @@ function ExpertDetailDialog({ expert }) {
     };
 
     const getGenderText = (jk) => {
-        return jk === "L" ? "Laki-laki" : "Perempuan";
+        return jk === "laki-laki" ? "Laki-laki" : "Perempuan";
     };
 
     const formatExperience = (experience) => {
@@ -295,7 +295,7 @@ function ExpertDetailDialog({ expert }) {
                         <div>
                             <h4 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
                                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                    <Phone className="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" />
+                                    <Mail className="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" />
                                 </div>
                                 Informasi Kontak
                             </h4>
@@ -549,7 +549,7 @@ export default function ExpertsPage() {
                                             <div className="flex items-center gap-2 sm:gap-3 text-gray-600">
                                                 <User className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
                                                 <span className="text-xs sm:text-sm">
-                                                    {expert.jk === "L"
+                                                    {expert.jk === "laki-laki"
                                                         ? "Laki-laki"
                                                         : "Perempuan"}{" "}
                                                     •{" "}

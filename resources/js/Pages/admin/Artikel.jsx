@@ -244,6 +244,9 @@ export default function ArticlesManagementPage() {
                                                 <TableHeader className="bg-muted/40">
                                                     <TableRow>
                                                         <TableHead className="p-4">
+                                                            No
+                                                        </TableHead>
+                                                        <TableHead className="p-4">
                                                             Foto
                                                         </TableHead>
                                                         <TableHead className="p-4">
@@ -294,6 +297,9 @@ export default function ArticlesManagementPage() {
                                                                     }}
                                                                     className="transition-colors duration-200 even:bg-muted/10 hover:bg-muted/20"
                                                                 >
+                                                                    <TableCell className="p-4 font-medium">
+                                                                        {(currentPage - 1) * perPage + index + 1}
+                                                                    </TableCell>
                                                                     {/* Foto */}
                                                                     <TableCell className="p-4">
                                                                         {article.photo ? (

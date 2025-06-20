@@ -186,7 +186,7 @@ function ExpertDetailDialog({ expert }) {
     };
 
     const getGenderText = (jk) => {
-        return jk === "L" ? "Laki-laki" : "Perempuan";
+        return jk === "laki-laki" ? "Laki-laki" : "Perempuan";
     };
 
     const formatExperience = (experience) => {
@@ -829,7 +829,7 @@ export default function LandingPage() {
                                                 <div className="flex items-center gap-2 sm:gap-3 text-gray-600">
                                                     <User className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
                                                     <span className="text-xs sm:text-sm">
-                                                        {expert.jk === "L"
+                                                        {expert.jk === "laki-laki"
                                                             ? "Laki-laki"
                                                             : "Perempuan"}{" "}
                                                         •{" "}
