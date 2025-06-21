@@ -16,13 +16,15 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Upload, Save, Route } from "lucide-react";
+import { ArrowLeft, Upload, Save } from "lucide-react";
 import { ExpertSidebar } from "../../layout/ahli-sidebar";
 import { AdminHeader } from "../../layout/admin-header";
 import { Breadcrumb } from "../../components/breadcrump";
 import { useAlert } from "../../components/myalert";
 import { usePage, router, Head } from "@inertiajs/react";
 import { route } from "ziggy-js";
+import MapPicker from "../../components/ui/map-picker";
+
 export default function EditProfilePage() {
     const { user, flash, spesialisasi } = usePage().props;
 
@@ -35,9 +37,12 @@ export default function EditProfilePage() {
         tgl_lahir: user.tgl_lahir ? user.tgl_lahir.substring(0, 10) : "",
         jk: user.jk || "",
         pengalaman: user.pengalaman || "",
-        foto: user.foto || null, // URL foto atau null
-        fotoFile: null, // file asli untuk upload
-        id_ahli: user.id_ahli || "", // tambah ini
+        foto: user.foto || null,
+        fotoFile: null,
+        id_ahli: user.id_ahli || "",
+        alamat: user.lokasi?.alamat || "",
+        latitude: user.lokasi?.latitude || null,
+        longitude: user.lokasi?.longitude || null,
     });
 
     const { showSuccess, AlertContainer } = useAlert();
@@ -53,7 +58,6 @@ export default function EditProfilePage() {
         { label: "Edit Profile", href: route("ahli-profile-edit-acount") },
     ];
 
-    // Handle input text change (nama, email, telp, tgl_lahir)
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -62,7 +66,15 @@ export default function EditProfilePage() {
         }));
     };
 
-    // Handle radio change untuk jenis kelamin
+    const handleLocationChange = ({ lat, lng, address }) => {
+        setFormData((prev) => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng,
+            alamat: address,
+        }));
+    };
+
     const handleRadioChange = (value) => {
         setFormData((prev) => ({
             ...prev,
@@ -70,7 +82,6 @@ export default function EditProfilePage() {
         }));
     };
 
-    // Handle perubahan file gambar
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -86,7 +97,6 @@ export default function EditProfilePage() {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Contoh: buat FormData untuk dikirim ke server via axios/fetch
         const data = new FormData();
         data.append("nama", formData.nama);
         data.append("email", formData.email);
@@ -96,15 +106,23 @@ export default function EditProfilePage() {
         data.append("pengalaman", formData.pengalaman);
         data.append("id_ahli", formData.id_ahli);
 
+        if (formData.latitude && formData.longitude && formData.alamat) {
+            data.append("alamat", formData.alamat);
+            data.append("latitude", formData.latitude);
+            data.append("longitude", formData.longitude);
+        }
+
         if (formData.fotoFile) {
             data.append("foto", formData.fotoFile);
         }
 
-        router.post(route('ahli-profile-update-acount'), data);
+        router.post(route("ahli-profile-update-acount"), data, {
+            _method: 'put',
+        });
     };
-
+    
     const goBack = () => {
-        console.log("test");
+        window.history.back();
     };
 
     const containerVariants = {
@@ -126,18 +144,14 @@ export default function EditProfilePage() {
 
     return (
         <>
-            <div className="fixed z-[500]">
-                <AlertContainer />
-            </div>
+            <AlertContainer />
             <Head title="edit-profile-ahli" />
             <div className="flex flex-col min-h-screen bg-background">
                 <AdminHeader />
                 <div className="flex flex-1 overflow-hidden">
                     <ExpertSidebar activeLink={route("ahli-profile")} />
-                    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 md:ml-0">
-                        <div className="container bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50  mx-auto px-4 py-6">
-                            <Breadcrumb items={breadcrumbItems} />
-                        </div>
+                    <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                        <Breadcrumb items={breadcrumbItems} />
                         <motion.div
                             className="w-full"
                             variants={containerVariants}
@@ -146,14 +160,6 @@ export default function EditProfilePage() {
                         >
                             <Card className="shadow-xl border-0">
                                 <CardHeader className="bg-green-600 text-white rounded-t-lg">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute left-2 top-2 text-white hover:bg-green-700"
-                                        onClick={goBack}
-                                    >
-                                        <ArrowLeft className="h-5 w-5" />
-                                    </Button>
                                     <CardTitle className="text-center text-2xl">
                                         Edit Profil
                                     </CardTitle>
@@ -215,7 +221,6 @@ export default function EditProfilePage() {
                                                 >
                                                     Nama
                                                 </Label>
-                                                {/* Input Fields */}
                                                 <Input
                                                     id="nama"
                                                     name="nama"
@@ -281,7 +286,6 @@ export default function EditProfilePage() {
                                                 />
                                             </motion.div>
 
-                                            {/* Pengalaman */}
                                             <motion.div variants={itemVariants}>
                                                 <Label
                                                     htmlFor="pengalaman"
@@ -360,6 +364,27 @@ export default function EditProfilePage() {
                                                 </select>
                                             </motion.div>
                                         </div>
+
+                                        <motion.div variants={itemVariants} className="mt-4">
+                                            <Label className="text-green-700 mb-2 block">
+                                                Lokasi
+                                            </Label>
+                                            <MapPicker
+                                                onLocationChange={handleLocationChange}
+                                                initialPosition={
+                                                    formData.latitude && formData.longitude
+                                                        ? { lat: parseFloat(formData.latitude), lng: parseFloat(formData.longitude) }
+                                                        : null
+                                                }
+                                            />
+                                            <Input
+                                                name="alamat"
+                                                value={formData.alamat}
+                                                onChange={handleChange}
+                                                placeholder="Detail Alamat"
+                                                className="mt-2"
+                                            />
+                                        </motion.div>
 
                                         <motion.div variants={itemVariants}>
                                             <CardFooter className="px-0 pt-6">

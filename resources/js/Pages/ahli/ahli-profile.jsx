@@ -11,6 +11,7 @@ import {
     Pencil,
     KeyRound,
     Briefcase,
+    MapPin,
 } from "lucide-react";
 import { ExpertSidebar } from "../../layout/ahli-sidebar";
 import { AdminHeader } from "../../layout/admin-header";
@@ -18,6 +19,7 @@ import { useAlert } from "../../components/myalert";
 import { Breadcrumb } from "../../components/breadcrump";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
+import MapPicker from "../../components/ui/map-picker";
 
 export default function ProfilePage() {
     const { user } = usePage().props;
@@ -193,6 +195,31 @@ export default function ProfilePage() {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Lokasi */}
+                                        {user.lokasi && (
+                                            <div>
+                                                <h4 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                                                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                                                        <MapPin className="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" />
+                                                    </div>
+                                                    Lokasi
+                                                </h4>
+
+                                                <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-4 sm:p-6 rounded-xl border border-emerald-200">
+                                                    <p className="text-gray-700 mb-4">{user.lokasi.alamat}</p>
+                                                    <div className="overflow-hidden rounded-lg">
+                                                    <MapPicker
+                                                        isEditable={false}
+                                                        initialPosition={{
+                                                            lat: parseFloat(user.lokasi.latitude),
+                                                            lng: parseFloat(user.lokasi.longitude),
+                                                        }}
+                                                    />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </motion.div>
 
                                     <motion.div

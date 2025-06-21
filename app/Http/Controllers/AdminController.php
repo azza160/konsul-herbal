@@ -231,7 +231,7 @@ class AdminController extends Controller
         // Ambil user dengan role 'ahli' beserta data spesialisasi dari relasi 'ahli'
         $user = Auth::user();
 
-        $usersAhli = User::with('ahli')
+        $usersAhli = User::with('ahli', 'lokasi')
             ->where('role', 'ahli')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -246,7 +246,8 @@ class AdminController extends Controller
                     'spesialisasi' => $user->ahli ? $user->ahli->nama_spesialisasi : null,
                     'id_spesialisasi' => $user->ahli ? $user->ahli->id : null,
                     'jk' => $user->jk,
-                    'tgl_lahir' => $user->tgl_lahir
+                    'tgl_lahir' => $user->tgl_lahir,
+                    'lokasi' => $user->lokasi,
                 ];
             });
 
@@ -292,6 +293,9 @@ class AdminController extends Controller
             'tgl_lahir' => 'nullable|date',
             'telp' => 'nullable|string|max:20',
             'pengalaman' => 'nullable|string',
+            'alamat' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
         ]);
 
 
@@ -306,7 +310,7 @@ class AdminController extends Controller
         
 
         // Buat user baru dengan UUID
-        User::create([
+        $user = User::create([
             'id' => Str::uuid()->toString(),
             'id_ahli' => $validated['id_ahli'],
             'nama' => $validated['nama'],
@@ -318,6 +322,13 @@ class AdminController extends Controller
             'tgl_lahir' => $validated['tgl_lahir'] ?? null,
             'telp' => $validated['telp'] ?? null,
             'pengalaman' => $validated['pengalaman'] ?? null,
+        ]);
+
+        // Simpan lokasi
+        $user->lokasi()->create([
+            'alamat' => $validated['alamat'],
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
         ]);
 
         return redirect()->route('ahli-herbal-dashboard')->with('success', 'Ahli Herbal berhasil ditambahkan.');

@@ -66,7 +66,7 @@ class AhliController extends Controller
 
     public function Profile()
     {
-        $user = Auth::user();
+        $user = User::with('lokasi')->find(Auth::id());
         return Inertia::render('ahli/ahli-profile', [
             'user' => $user,
         ]);
@@ -74,7 +74,7 @@ class AhliController extends Controller
 
     public function EditProfile()
     {
-        $user = Auth::user();
+        $user = User::with('lokasi')->find(Auth::id());
         $spesialisasi = Ahli::all(); // Ambil semua spesialisasi untuk dropdown
 
         return Inertia::render('ahli/edit-profile', [
@@ -96,6 +96,9 @@ class AhliController extends Controller
             'pengalaman' => 'nullable|string',
             'id_ahli' => 'nullable|exists:ahlis,id',
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'alamat' => 'nullable|string|max:255',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         // Jika ada file baru, hapus foto lama dan simpan yang baru
@@ -112,6 +115,18 @@ class AhliController extends Controller
 
         // Update data user
         $user->update($validated);
+
+        // Update atau buat data lokasi
+        if (isset($validated['latitude']) && isset($validated['longitude']) && isset($validated['alamat'])) {
+            $user->lokasi()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'alamat' => $validated['alamat'],
+                    'latitude' => $validated['latitude'],
+                    'longitude' => $validated['longitude'],
+                ]
+            );
+        }
 
         return redirect()->back()->with('success', 'Profil berhasil diperbarui.');
     }

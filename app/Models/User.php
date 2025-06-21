@@ -70,5 +70,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class, 'user_id');
     }
+
+    public function lokasi()
+    {
+        return $this->hasOne(Lokasi::class, 'user_id');
+    }
     
 }

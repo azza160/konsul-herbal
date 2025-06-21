@@ -6,6 +6,21 @@ use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\AhliController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MapController;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
 
 // Guest only
 Route::middleware('guest')->group(function () {
@@ -107,3 +122,25 @@ Route::middleware(['auth', 'check.role:admin'])->group(function () {
 
 
 });
+
+Route::get('/', [PenggunaController::class, 'LandingPageShow'])->name('landing-page');
+
+
+/* Route untuk Geocoding */
+Route::get('/geocode/search', [MapController::class, 'search'])->name('geocode.search');
+Route::get('/geocode/reverse', [MapController::class, 'reverse'])->name('geocode.reverse');
+
+
+Route::get('/dashboard', function () {
+    if (Auth::check()) {
+        $user = Auth::user();
+        if ($user->role === 'admin') {
+            return redirect()->route('admin-dashboard');
+        } elseif ($user->role === 'ahli') {
+            return redirect()->route('ahli-dashboard-acount');
+        } else {
+            return redirect()->route('landing-page');
+        }
+    }
+    return redirect()->route('login'); // fallback jika tidak terautentikasi
+})->middleware(['auth'])->name('dashboard');

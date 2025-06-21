@@ -42,6 +42,7 @@ import {
     UserCheck,
     Users,
     BarChart3,
+    MapPin,
 } from "lucide-react";
 import { Head, Link, usePage, router } from "@inertiajs/react";
 import { useAlert } from "../../components/myalert";
@@ -290,6 +291,9 @@ export default function ArticlesManagementPage() {
                                                             Pengalaman
                                                         </TableHead>
                                                         <TableHead className="p-4">
+                                                            Lokasi
+                                                        </TableHead>
+                                                        <TableHead className="p-4">
                                                             Aksi
                                                         </TableHead>
                                                     </TableRow>
@@ -435,6 +439,21 @@ export default function ArticlesManagementPage() {
                                                                                 Tidak
                                                                                 ada
                                                                                 pengalaman
+                                                                            </span>
+                                                                        )}
+                                                                    </TableCell>
+
+                                                                    {/* Lokasi */}
+                                                                    <TableCell className="p-4 text-muted-foreground">
+                                                                        {ahli.lokasi ? (
+                                                                            <span>
+                                                                                {ahli.lokasi.alamat.length > 50
+                                                                                    ? ahli.lokasi.alamat.slice(0, 50) + '...'
+                                                                                    : ahli.lokasi.alamat}
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="italic text-muted-foreground">
+                                                                                -
                                                                             </span>
                                                                         )}
                                                                     </TableCell>
